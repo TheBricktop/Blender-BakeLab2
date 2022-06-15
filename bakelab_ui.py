@@ -47,6 +47,12 @@ class BakeLabUI(Panel):
                         col.prop(props, "cage_extrusion")
             
             layout.separator()
+            col = layout.column(align=True)
+            col.label(text="Custom bake source settings:")
+            row.prop(props, "custom_source_node", text='')
+            row.prop(props, "custom_source_node_name", text='')
+            
+            layout.separator()
             
             layout.prop(props, "compute_device")
             col = layout.column(align=True)

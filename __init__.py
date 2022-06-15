@@ -12,11 +12,11 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 bl_info = {
-    "name" : "BakeLab",
+    "name" : "BakeLab Cartoons",
     "author" : "Shahzod Boyxonov (specoolar@gmail.com)",
     "description" : "Bake textures easily",
     "blender" : (2, 81, 0),
-    "version" : (2, 0, 1),
+    "version" : (2, 0, 100),
     "location" : "View3D > Properties > BakeLab",
     "category" : "Baking"
 }
@@ -142,6 +142,15 @@ class BakeLabProperties(PropertyGroup):
             description = 'Names of baked images',
             default = "Atlas",
         )
+    custom_source_node_name  : StringProperty(
+        name = 'Custom source node name',
+        description = 'searches for input of this node',
+        default = "OUTPUT_MATERIAL",
+    )
+    custom_source_node : BoolProperty(
+        name = 'Start search from a custom node', 
+        default = False
+    )
     compute_device : EnumProperty(
             name = 'Device',
             description = 'Compute Device',

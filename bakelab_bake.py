@@ -173,19 +173,59 @@ class Baker(Operator):
                         emit.inputs[0].default_value[1] = pass_input.default_value
                         emit.inputs[0].default_value[2] = pass_input.default_value
                         emit.inputs[0].default_value[3] = 1
+    def passes_to_rgb_custom(self, node, src_socket, nodes, links, passes):
+        has_bsdf_inputs = False
+        if not has_bsdf_inputs:
+            emit = nodes.new(type = 'ShaderNodeEmission')
+            emit.inputs[0].default_value = 0, 0, 0, 0
+            links.new(emit.outputs[0], src_socket)
+            ####### Find Pass Input Socket{
+            pass_input = None
+            for Pass in passes:
+                for tmp_input in node.inputs:
+                    if tmp_input.name.casefold() == Pass:
+                        pass_input = tmp_input
+                        break
+            ####### }
+            if pass_input:
+                if len(pass_input.links):
+                    links.new(pass_input.links[0].from_socket, emit.inputs[0])
+                else:
+                    if   pass_input.type == 'RGBA':
+                        emit.inputs[0].default_value[0] = pass_input.default_value[0]
+                        emit.inputs[0].default_value[1] = pass_input.default_value[1]
+                        emit.inputs[0].default_value[2] = pass_input.default_value[2]
+                        emit.inputs[0].default_value[3] = pass_input.default_value[3]
+                    elif pass_input.type == 'VECTOR':
+                        emit.inputs[0].default_value[0] = pass_input.default_value[0]
+                        emit.inputs[0].default_value[1] = pass_input.default_value[1]
+                        emit.inputs[0].default_value[2] = pass_input.default_value[2]
+                        emit.inputs[0].default_value[3] = 1
+                    elif pass_input.type == 'VALUE':
+                        emit.inputs[0].default_value[0] = pass_input.default_value
+                        emit.inputs[0].default_value[1] = pass_input.default_value
+                        emit.inputs[0].default_value[2] = pass_input.default_value
+                        emit.inputs[0].default_value[3] = 1
     
-    def passes_to_emit_node(self, mat, passes):
+    def passes_to_emit_node(self, context, mat, passes):
         nodes = mat.node_tree.nodes
         links = mat.node_tree.links
-        
-        out = self.find_node(nodes, 'OUTPUT_MATERIAL')
+        props = context.scene.BakeLabProps
+        ######My edit for cartoons
+        if props.custom_source_node:
+            out = self.find_node(nodes, props.custom_source_node_name)
+        else:
+            out = self.find_node(nodes, "OUTPUT_MATERIAL")
             
         if out:
         #### Modify Nodes
             split_passes = passes.split(',')
             for i in range(len(split_passes)):
                 split_passes[i] = split_passes[i].strip().casefold()
-            self.passes_to_rgb(out, None, nodes, links, split_passes)
+            if props.custom_source_node: 
+                self.passes_to_rgb_custom(out, None, nodes, links, split_passes)
+            else:
+                self.passes_to_rgb(out, None, nodes, links, split_passes)
         else:
         #### Create Default Texture Nodes
             out = nodes.new(type = 'ShaderNodeOutputMaterial')
@@ -215,6 +255,7 @@ class Baker(Operator):
         return new_node
     
     def find_node(self, nodes, type):
+        print("Find "+type)
         for node in nodes:
             if node.type == type:
                 if type == "OUTPUT_MATERIAL":
@@ -306,7 +347,7 @@ class Baker(Operator):
                 gr_nodes = node.node_tree.nodes
                 gr_in  = self.find_node(gr_nodes, 'GROUP_INPUT')
                 gr_out = self.find_node(gr_nodes, 'GROUP_OUTPUT')
-                if gr_in is None: continue
+                ##if gr_in is None: continue
                 if gr_out is None: continue
                 
                 for gr_node in gr_nodes:
@@ -535,10 +576,10 @@ class Baker(Operator):
                 if map.type == 'CustomPass':
                     if map.deep_search:
                         self.ungroup_nodes(mat.node_tree)
-                    self.passes_to_emit_node(mat, map.pass_name)
+                    self.passes_to_emit_node(context, mat, map.pass_name)
                 if map.type == 'Albedo':
                     self.ungroup_nodes(mat.node_tree)
-                    self.passes_to_emit_node(mat, 'Albedo,Color,Base Color,Col,Paint Color')
+                    self.passes_to_emit_node(context, mat, 'Albedo,Color,Base Color,Col,Paint Color')
                 if map.type == 'Displacement':
                     self.displacement_to_color(mat)
                     
