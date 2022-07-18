@@ -222,6 +222,9 @@ class BakeLabUI(Panel):
                                 subcol.prop(item, "exr_codec_32")
                             if item.exr_depth == '16':
                                 subcol.prop(item, "exr_codec_16")
+                        if item.file_format == "BMP":
+                            row = subcol.row()
+
         
         else:
             if props.bake_state == 'BAKING':

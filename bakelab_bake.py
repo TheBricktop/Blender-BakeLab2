@@ -497,6 +497,8 @@ class Baker(Operator):
                 extension = '.jpg'
             if map.file_format == 'OPEN_EXR':
                 extension = '.exr'
+            if map.file_format == 'BMP':
+                extension = '.bmp'
             
             abs_save_path = bpy.path.abspath(props.save_path)
             if not os.path.isdir(abs_save_path):

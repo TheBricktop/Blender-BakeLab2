@@ -232,7 +232,8 @@ class BakeLabAddMapItem(bpy.types.Operator):
                 items =  (
                     ('PNG',  'PNG', ''),
                     ('JPEG', 'JPEG', ''),
-                    ('OPEN_EXR',  'OpenEXR', '')
+                    ('OPEN_EXR',  'OpenEXR', ''),
+                    ('BMP',  'BMP', '')
                 )
             )
     png_channels : EnumProperty(
