@@ -212,7 +212,7 @@ class Baker(Operator):
         links = mat.node_tree.links
         props = context.scene.BakeLabProps
         ######My edit for cartoons
-        if props.custom_source_node:
+        if props.custom_source_node != "":
             out = self.find_node(nodes, props.custom_source_node_name)
         else:
             out = self.find_node(nodes, "OUTPUT_MATERIAL")
@@ -450,6 +450,7 @@ class Baker(Operator):
         return pow(2,round(log2(num)))
     
     def PrepareImage(self, context, map, objs, name):
+
         props = context.scene.BakeLabProps
         self.SetSaveImageSettings(context, map)
         
@@ -475,17 +476,20 @@ class Baker(Operator):
             height = map.target_height * map.final_aa
         )
         bake_image.use_generated_float = map.float_depth
-        try:
-            bake_image.colorspace_settings.name = map.color_space
-        except:
+        if map.output_colorspace == 'Default':
             try:
-                if map.color_space == 'sRGB':
-                    bake_image.colorspace_settings.name = 'sRGB EOTF'
-                elif map.color_space == 'Non-Color':
-                    bake_image.colorspace_settings.name = 'Non-Colour Data'
+                bake_image.colorspace_settings.name = map.color_space
             except:
-                self.report(type = {'WARNING'}, message = "Couldn't change color space of image")
-        
+                try:#color spaces list https://docs.blender.org/api/current/bpy.types.ColorManagedInputColorspaceSettings.html#bpy.types.ColorManagedInputColorspaceSettings
+                    if map.color_space == 'sRGB':
+                        bake_image.colorspace_settings.name = 'sRGB'#Changed from 'sRGB EOTF'
+                    elif map.color_space == 'Non-Color':
+                        bake_image.colorspace_settings.name = 'Non-Color'#Changed from 'Non-Colour Data'
+                except:
+                    self.report(type = {'WARNING'}, message = "Couldn't change color space of image")
+        else:
+            bake_image.colorspace_settings.name = map.output_colorspace
+
         context.scene.render.bake.margin = props.bake_margin * map.final_aa
         if props.save_or_pack == 'PACK':
             bake_image.pack()
@@ -511,9 +515,18 @@ class Baker(Operator):
                     bake_image.filepath = abspath(join(abs_save_path, name, bake_image.name + extension))
             else:
                 bake_image.filepath = abspath(join(abs_save_path, bake_image.name + extension))
-            
+
+            # bake_image.source = "GENERATED" #ignores "View Transform" property from "Render Properties"
+            # bake_image.use_view_as_render = True
+            # bake_image.filepath = bake_image.filepath
+            # bake_image.save()
+            # view_transform = bpy.context.scene.view_settings.view_transform
+            # bpy.context.scene.view_settings.view_transform = 'Standard'
             bake_image.save_render(bake_image.filepath)
-        
+            # bpy.context.scene.view_settings.view_transform = view_transform
+            # bake_image.source = "GENERATED"
+
+
         return bake_image
     
     def SetSaveImageSettings(self, context, map):
@@ -680,6 +693,10 @@ class Baker(Operator):
         scene.render.bake.use_cage = True
         scene.render.bake.cage_extrusion = props.cage_extrusion
         scene.render.bake.cage_object = None
+
+        view_transform = bpy.context.scene.view_settings.view_transform
+        if props.ignore_view_transform:
+            bpy.context.scene.view_settings.view_transform = 'Standard'
         
         
         if len(self.default_selected_objects) == 0:
@@ -903,6 +920,7 @@ class Baker(Operator):
                 baked_data.AddMap(map, bake_image) # Save baking data
                 self.RestoreMaterials()
         ##########################################################################################
+        bpy.context.scene.view_settings.view_transform = view_transform
         props.bake_state = 'BAKED'
         yield 0 #Done
         

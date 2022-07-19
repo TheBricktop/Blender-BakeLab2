@@ -44,6 +44,12 @@ class BakeLabMap(PropertyGroup):
         description = 'Search inside of node groups',
         default = True
     )
+    # ignore_view_transform: BoolProperty(
+    #     name='Ignore View Transform',
+    #     description='Set view transform to "Standart" for the duration of the bake',
+    #     default=True
+    # )
+    # custom_source_node: StringProperty(name='Custom source node', default='', description ='Leave empty for default value')
     
     img_name : StringProperty(name = 'Image name', default = '*')
     width  : IntProperty( 
@@ -80,12 +86,29 @@ class BakeLabMap(PropertyGroup):
                         ('Non-Color','Non-Color','')),
                 default = 'sRGB'
             )
+    output_colorspace : EnumProperty(
+                name = 'Output Color Space',
+                description = 'Output color space',
+                items =  (
+                    ('Default', 'Default', 'Depending on source img color space'),
+                    ('Filmic Log', 'Filmic Log', ''),
+                    ('Linear', 'Linear', ''),
+                    ('Linear ACES', 'Linear ACES', ''),
+                    ('Linear ACEScg', 'Linear ACEScg', ''),
+                    ('Non-Color', 'Non-Color', ''),
+                    ('Raw', 'Raw', ''),
+                    ('sRGB', 'sRGB', ''),
+                    ('XYZ', 'XYZ', '')
+                ),
+                default = 'Default'
+            )
     file_format : EnumProperty(
                 name = 'Format',
                 items =  (
                     ('PNG',  'PNG', ''),
                     ('JPEG', 'JPEG', ''),
-                    ('OPEN_EXR',  'OpenEXR', '')
+                    ('OPEN_EXR',  'OpenEXR', ''),
+                    ('BMP',  'BMP', '')
                 )
             )
     png_channels : EnumProperty(
@@ -109,6 +132,12 @@ class BakeLabMap(PropertyGroup):
                 min = 0, max = 100
             )
     jpg_channels : EnumProperty(
+                name = 'Color',
+                items =  (('BW','BW',''),
+                        ('RGB','RGB','')),
+                default = 'RGB'
+            )
+    bmp_channels : EnumProperty(
                 name = 'Color',
                 items =  (('BW','BW',''),
                         ('RGB','RGB','')),
@@ -236,6 +265,7 @@ class BakeLabAddMapItem(bpy.types.Operator):
                     ('BMP',  'BMP', '')
                 )
             )
+
     png_channels : EnumProperty(
                 name = 'Color',
                 items =  (('BW','BW',''),
@@ -250,6 +280,29 @@ class BakeLabAddMapItem(bpy.types.Operator):
                         ('16','16 byte','')),
                 default = '8'
             )
+    output_colorspace: EnumProperty(
+        name='Output Color Space',
+        description='Output color space',
+        items=(
+            ('Default', 'Default', 'Depending on source img color space'),
+            ('Filmic Log', 'Filmic Log', ''),
+            ('Linear', 'Linear', ''),
+            ('Linear ACES', 'Linear ACES', ''),
+            ('Linear ACEScg', 'Linear ACEScg', ''),
+            ('Non-Color', 'Non-Color', ''),
+            ('Raw', 'Raw', ''),
+            ('sRGB', 'sRGB', ''),
+            ('XYZ', 'XYZ', '')
+        ),
+        default='Default'
+    )
+    # custom_source_node: StringProperty(name='Custom source node', default='',
+    #                                    description='Leave empty for default value')
+    # ignore_view_transform: BoolProperty(
+    #     name='Ignore View Transform',
+    #     description='Set view transform to "Standart" for the duration of the bake',
+    #     default=True
+    # )
     png_compression : IntProperty(
                 name = 'Compression', 
                 default = 15,
@@ -402,6 +455,8 @@ class BakeLabAddMapItem(bpy.types.Operator):
                     col.prop(self, "exr_codec_32")
                 if self.exr_depth == '16':
                     col.prop(self, "exr_codec_16")
+            if self.file_format == "BMP":
+                row = col.row()
         
     def invoke(self, context, event):
         wm = context.window_manager
@@ -415,6 +470,9 @@ class BakeLabAddMapItem(bpy.types.Operator):
         item.width       = self.width
         item.height      = self.height
         item.image_scale = self.image_scale
+        item.output_colorspace = self.output_colorspace
+        # item.custom_source_node = self.custom_source_node
+        # item.ignore_view_transform = self.ignore_view_transform
         
         item.float_depth      = self.float_depth
         item.file_format      = self.file_format

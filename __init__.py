@@ -15,8 +15,8 @@ bl_info = {
     "name" : "BakeLab Cartoons",
     "author" : "Shahzod Boyxonov (specoolar@gmail.com)",
     "description" : "Bake textures easily",
-    "blender" : (2, 81, 0),
-    "version" : (2, 0, 102),
+    "blender" : (3, 0, 0),
+    "version" : (2, 0, 103),
     "location" : "View3D > Properties > BakeLab",
     "category" : "Baking"
 }
@@ -142,15 +142,15 @@ class BakeLabProperties(PropertyGroup):
             description = 'Names of baked images',
             default = "Atlas",
         )
-    custom_source_node_name  : StringProperty(
-        name = 'Custom source node name',
-        description = 'searches for input of this node',
-        default = "OUTPUT_MATERIAL",
-    )
-    custom_source_node : BoolProperty(
-        name = 'Start search from a custom node', 
-        default = False
-    )
+    # custom_source_node_name  : StringProperty(
+    #     name = 'Custom source node name',
+    #     description = 'searches for input of this node',
+    #     default = "OUTPUT_MATERIAL",
+    # )
+    # custom_source_node : BoolProperty(
+    #     name = 'Start search from a custom node',
+    #     default = False
+    # )
     compute_device : EnumProperty(
             name = 'Device',
             description = 'Compute Device',
@@ -167,6 +167,13 @@ class BakeLabProperties(PropertyGroup):
                 ),
                 default = 'PACK'
             )
+    custom_source_node: StringProperty(name='Custom source node', default='',
+                                       description='Leave empty for default value')
+    ignore_view_transform: BoolProperty(
+        name='Ignore View Transform',
+        description='Set view transform to "Standart" for the duration of the bake',
+        default=True
+    )
     create_folder : BoolProperty(
         name="Create folder",
         description="Automatically creates a folder named after the object(s)",

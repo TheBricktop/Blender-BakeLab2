@@ -46,19 +46,15 @@ class BakeLabUI(Panel):
                     if props.pre_join_mesh:
                         col.prop(props, "cage_extrusion")
             
-            layout.separator()
-            col = layout.column(align=True)
-            col.label(text="Custom bake source settings:")
-            row.prop(props, "custom_source_node", text='')
-            row.prop(props, "custom_source_node_name", text='')
-            
-            layout.separator()
-            
+            # layout.separator()
+
             layout.prop(props, "compute_device")
             col = layout.column(align=True)
             col.use_property_split = True
             col.use_property_decorate = False
+
             row = col.row(align=True)
+
             row.prop(props, "image_size")
             if props.image_size == 'ADAPTIVE':
                 row.prop(props, "adaptive_image_Settings", icon='PREFERENCES')
@@ -74,6 +70,8 @@ class BakeLabUI(Panel):
                 
             layout.use_property_split = True
             layout.prop(props, "anti_alias")
+            layout.prop(props, "custom_source_node")
+            layout.prop(props, "ignore_view_transform")
             layout.prop(props, "save_or_pack", expand=True)
             layout.use_property_split = False
             if props.save_or_pack == "SAVE":
@@ -197,12 +195,19 @@ class BakeLabUI(Panel):
                 
                 col.separator()
                 col.prop(item, "float_depth")
+
                 if props.save_or_pack == 'SAVE':
                     row = col.row()
                     row.prop(item, "file_format")
                     row.prop(props, "show_file_settings", icon = 'PREFERENCES')
+
                     if props.show_file_settings:
                         subcol = col.column()
+
+                        subcol.prop(item, "output_colorspace")
+                        subcol.prop(item, "ignore_view_transform")
+
+                        # subcol.prop(props, "ignore_view_transform")
                         if item.file_format == "PNG":
                             row = subcol.row()
                             row.prop(item, "png_channels", expand = True)
@@ -224,6 +229,8 @@ class BakeLabUI(Panel):
                                 subcol.prop(item, "exr_codec_16")
                         if item.file_format == "BMP":
                             row = subcol.row()
+                            row.prop(item, "bmp_channels", expand=True)
+
 
         
         else:
