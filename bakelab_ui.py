@@ -205,7 +205,6 @@ class BakeLabUI(Panel):
                         subcol = col.column()
 
                         subcol.prop(item, "output_colorspace")
-                        subcol.prop(item, "ignore_view_transform")
 
                         # subcol.prop(props, "ignore_view_transform")
                         if item.file_format == "PNG":

@@ -13,10 +13,10 @@
 
 bl_info = {
     "name" : "BakeLab Cartoons",
-    "author" : "Shahzod Boyxonov (specoolar@gmail.com)",
+    "author" : "Shahzod Boyxonov (specoolar@gmail.com), modified by heme3ic@gmail.com",
     "description" : "Bake textures easily",
     "blender" : (3, 0, 0),
-    "version" : (2, 0, 103),
+    "version" : (2, 0, 1031),
     "location" : "View3D > Properties > BakeLab",
     "category" : "Baking"
 }
