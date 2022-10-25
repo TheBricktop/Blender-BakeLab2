@@ -229,6 +229,10 @@ class BakeLabAddMapItem(bpy.types.Operator):
     type: EnumProperty(
             name = 'Type',
             items =  (
+                    ('c_Albedo', 'Cartoons Albedo', ''),
+                    ('c_ORM', 'Cartoons ORM', ''),
+                    ('c_Normal-true', 'Cartoons True Normals', ''),
+                    None,
                     ('Albedo',      'Albedo',''),
                     ('Normal',      'Normal',''),
                     ('Glossy',      'Glossy',''),
@@ -364,6 +368,24 @@ class BakeLabAddMapItem(bpy.types.Operator):
             )
                     
     def calcItemSettings(self,context,item):
+        if self.type == 'c_Albedo':
+            item.img_name = '*_orm'
+            item.samples  = 4
+            png_compression = 0
+            deep_search = false
+        if self.type == 'c_ORM':
+            item.img_name = '*_orm'
+            item.samples  = 4
+            item.color_space = 'Non-Color'
+            png_compression = 0
+            deep_search = false
+        if self.type == 'c_Normal-true':
+            item.img_name = '*_n'
+            item.samples = 16
+            item.color_space = 'Non-Color'
+            item.aa_override = 1  # Because cycles has buildin anti-aliasing for normals
+            deep_search = false
+            png_compression = 0
         if self.type == 'Albedo':
             item.img_name = '*_t'
             item.samples  = 4

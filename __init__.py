@@ -16,7 +16,7 @@ bl_info = {
     "author" : "Shahzod Boyxonov (specoolar@gmail.com), modified by heme3ic@gmail.com",
     "description" : "Bake textures easily",
     "blender" : (3, 0, 0),
-    "version" : (2, 0, 1031),
+    "version" : (2, 0, 104),
     "location" : "View3D > Properties > BakeLab",
     "category" : "Baking"
 }
@@ -80,9 +80,20 @@ class BakeLabProperties(PropertyGroup):
             items = (
                 ("INDIVIDUAL", "Individual Objects", "", "PIVOT_INDIVIDUAL", 1),
                 ("ALL_TO_ONE", "All To One Image",   "", "PROP_ON", 2),
-                ("TO_ACTIVE",  "Selected to active", "", "PIVOT_ACTIVE", 3)
+                ("TO_ACTIVE",  "Selected to active", "", "PIVOT_ACTIVE", 3),
+                ("ON_ITSELF", "Bake object on itself", "", "SELF_TO_SELF", 4)
             ),
             default = "INDIVIDUAL"
+        )
+    selfbake_uv_src : IntProperty(
+            name = 'Source UV num',
+            default = 0,
+            min = 0
+        )
+    selfbake_uv_target : IntProperty(
+            name = 'Target UV num',
+            default = 1,
+            min = 0
         )
     cage_extrusion : FloatProperty(
             name = 'Cage Extrusion', default = 0.05,
@@ -171,7 +182,7 @@ class BakeLabProperties(PropertyGroup):
                                        description='Leave empty for default value')
     ignore_view_transform: BoolProperty(
         name='Ignore View Transform',
-        description='Set view transform to "Standart" for the duration of the bake',
+        description='Set view transform to "Standard" for the duration of the bake',
         default=True
     )
     create_folder : BoolProperty(

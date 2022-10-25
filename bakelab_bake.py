@@ -83,6 +83,9 @@ class Baker(Operator):
         self.default_use_cage          = bake_settings.use_cage
         self.default_cage_extrusion    = bake_settings.cage_extrusion
         self.default_cage_object       = bake_settings.cage_object
+
+        # self.default_selfbake_uv_src    = bake_settings.selfbake_uv_src
+        # self.default_selfbake_uv_target = bake_settings.selfbake_uv_target
         # }
         
     def restore_defaults(self, context):
@@ -131,6 +134,9 @@ class Baker(Operator):
         bake_settings.use_cage                 = self.default_use_cage
         bake_settings.cage_extrusion           = self.default_cage_extrusion
         bake_settings.cage_object              = self.default_cage_object
+
+        # bake_settings.selfbake_uv_src       = self.default_selfbake_uv_src
+        # bake_settings.selfbake_uv_target    = self.default_selfbake_uv_target
         # }
     
     def passes_to_rgb(self, node, src_socket, nodes, links, passes):
@@ -431,6 +437,12 @@ class Baker(Operator):
         if m_type == 'Subsurface':
             bake_type = 'Transmission'
         if m_type == 'CustomPass':
+            bake_type = 'EMIT'
+        if m_type == 'c_Normal-true':
+            bake_type = 'NORMAL'
+        if m_type == 'c_Albedo':
+            bake_type = 'EMIT'
+        if m_type == 'c_ORM':
             bake_type = 'EMIT'
         return bake_type
     
@@ -803,9 +815,9 @@ class Baker(Operator):
                     bake_image = self.PrepareImage(context, map, {merged_object}, props.global_image_name)
                     self.PrepareMaterials(context, merged_object, selected_objects, map, bake_image)
                     bake_type = self.init_bake_settings(context, map)
-                    
+
                     self.UpdateDisplayStatus(props,obj,map,bake_image)
-                    
+
                     # Bake {
                     while bpy.ops.object.bake('INVOKE_DEFAULT', type = bake_type) != {'RUNNING_MODAL'}:
                         yield 1
@@ -919,6 +931,137 @@ class Baker(Operator):
                 
                 baked_data.AddMap(map, bake_image) # Save baking data
                 self.RestoreMaterials()
+        ##########################################################################################
+        elif props.bake_mode == "ON_ITSELF":
+            def get_world_scale(o):
+                return o.matrix_world.to_scale()
+
+
+            if len(selected_objects) != 1:
+                self.report(type = {'ERROR'}, message = 'One Mesh have to be selected')
+                yield -1
+            if bpy.context.selected_objects[0].type != 'MESH':
+                self.report(type={'ERROR'}, message='Selected object is not a mesh, it is '+bpy.context.selected_objects[0].type)
+                yield -1
+            #saving info for later restoration
+            obj_selected = bpy.context.selected_objects[0] #saving selected object ref
+            obj_selected_name = obj_selected.name
+            obj_selected_data_name = obj_selected.data.name
+
+            obj_selected.name= obj_selected_name+"." + str(998)
+            obj_selected.data.name = obj_selected_data_name + "." + str(998)
+
+            #duplicating object
+            bpy.ops.object.duplicate(linked=False)
+            obj = bpy.context.selected_objects[0]
+            SelectObject(obj)
+            bpy.ops.mesh.separate(type='LOOSE')
+
+            # shifting parts
+            shft = 0
+            shft1 = 0
+            for nr, obj in enumerate(bpy.context.selected_objects):
+                shft = shft + max(obj.dimensions)*(1/get_world_scale(obj)[2])
+                if shft1 == 0:
+                    shft1 = shft
+                obj.location = (obj.location[0], obj.location[1], obj.location[2] + shft)
+                shft = shft + max(obj.dimensions) * (1 / get_world_scale(obj)[2])
+
+            # rejoin
+            bpy.context.view_layer.objects.active = bpy.context.selected_objects[0]
+            bpy.ops.object.join()
+
+            obj = bpy.context.selected_objects[0]
+            SelectObject(obj)
+            obj.location = (obj.location[0], obj.location[1], obj.location[2] - shft1)
+            # duplicate and set active UVs
+            obj_src = bpy.context.selected_objects[0]
+            bpy.context.object.data.uv_layers[props.selfbake_uv_src].active = True
+            bpy.context.object.data.uv_layers[props.selfbake_uv_src].active_render = True
+            #   duplicate
+            bpy.ops.object.duplicate(linked=False)
+            obj_target = bpy.context.selected_objects[0]
+            bpy.context.object.data.uv_layers[props.selfbake_uv_target].active = True
+            bpy.context.object.data.uv_layers[props.selfbake_uv_target].active_render = True
+            SelectObjects(obj_target, [obj_src])
+            # obj_src.select_set(state=True)
+            # obj_target.select_set(state=True)
+
+            selected_objects = bpy.context.selected_objects
+            active_object = obj_target
+
+            active_object.name = obj_selected_name
+            active_object.data.name = obj_selected_data_name
+
+            if len(selected_objects) < 2:
+                self.report(type = {'ERROR'}, message = 'Select atleast two mesh objects')
+                yield -1
+            if active_object.type != 'MESH':
+                self.report(type = {'ERROR'}, message = 'Active object is not mesh type')
+                yield -1
+            if len(active_object.data.uv_layers) == 0:
+                self.report(type = {'ERROR'}, message = 'Active object does not have UV maps')
+                yield -1
+
+            render.bake.use_selected_to_active = True
+            render.bake.use_cage = True
+            render.bake.cage_extrusion = props.cage_extrusion
+
+            # Save baking data {
+            baked_data = scene.BakeLab_Data.add()
+            baked_data.AddObj(active_object)
+            # }
+
+            SelectObjects(active_object, selected_objects)
+
+            props.baking_map_index = 0
+
+            for map in scene.BakeLabMaps:
+                if not map.enabled:
+                    continue
+                props.baking_map_index += 1
+
+                for obj in selected_objects:
+                    self.ReserveMaterials(obj)
+
+                bake_image = self.PrepareImage(context, map, {active_object}, active_object.name)
+                self.PrepareMaterials(
+                    context,
+                    active_object,
+                    [obj for obj in selected_objects
+                     if obj is not active_object],
+                    map,
+                    bake_image
+                )
+                bake_type = self.init_bake_settings(context, map)
+
+                self.UpdateDisplayStatus(props, obj, map, bake_image)
+                # print("baking type "+str(bake_type)+" for "+str(len(selected_objects))+" objects")
+                # Bake {
+                while bpy.ops.object.bake('INVOKE_DEFAULT', type=bake_type) != {'RUNNING_MODAL'}:
+                    yield 1
+                while not bake_image.is_dirty:
+                    yield 1
+                # }
+
+
+                self.down_scale(bake_image, props, map)
+                if props.save_or_pack == 'PACK':
+                    bake_image.pack()
+                else:
+                    bake_image.save_render(bake_image.filepath)
+
+                baked_data.AddMap(map, bake_image)  # Save baking data
+                self.RestoreMaterials()
+
+                # remove duplicates
+            obj_to_remove = [obj_src, obj_target]
+            bpy.ops.object.delete({"selected_objects": obj_to_remove})
+
+            obj_selected.name = obj_selected_name
+            obj_selected.data.name = obj_selected_data_name
+            SelectObject(obj_selected)
+
         ##########################################################################################
         bpy.context.scene.view_settings.view_transform = view_transform
         props.bake_state = 'BAKED'

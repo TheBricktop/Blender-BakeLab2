@@ -45,6 +45,10 @@ class BakeLabUI(Panel):
                     col.prop(props, "pre_join_mesh")
                     if props.pre_join_mesh:
                         col.prop(props, "cage_extrusion")
+                if props.bake_mode == "ON_ITSELF":
+                    col.prop(props, "cage_extrusion")
+                    col.prop(props, "selfbake_uv_src")
+                    col.prop(props, "selfbake_uv_target")
             
             # layout.separator()
 
@@ -158,7 +162,8 @@ class BakeLabUI(Panel):
                             
                         subcol.separator()
                         
-                if item.type == 'CustomPass':
+                if item.type in {'CustomPass',
+                                 'c_ORM'}:
                     col.label(text='Property Name')
                     row = col.row(align = True)
                     row.use_property_split = False
