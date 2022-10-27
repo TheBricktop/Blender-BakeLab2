@@ -966,6 +966,9 @@ class Baker(Operator):
                     shft1 = shft
                 obj.location = (obj.location[0], obj.location[1], obj.location[2] + shft)
                 shft = shft + max(obj.dimensions) * (1 / get_world_scale(obj)[2])
+                #remove bugged normals
+                bpy.context.view_layer.objects.active = obj
+                bpy.ops.mesh.customdata_custom_splitnormals_clear()
 
             # rejoin
             bpy.context.view_layer.objects.active = bpy.context.selected_objects[0]
