@@ -163,7 +163,9 @@ class BakeLabUI(Panel):
                         subcol.separator()
                         
                 if item.type in {'CustomPass',
-                                 'c_ORM'}:
+                                 'c_ORM',
+                                 'c_Albedo',
+                                 'c_Normal-true'}:
                     col.label(text='Property Name')
                     row = col.row(align = True)
                     row.use_property_split = False

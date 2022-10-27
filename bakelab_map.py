@@ -229,10 +229,6 @@ class BakeLabAddMapItem(bpy.types.Operator):
     type: EnumProperty(
             name = 'Type',
             items =  (
-                    ('c_Albedo', 'Cartoons Albedo', ''),
-                    ('c_ORM', 'Cartoons ORM', ''),
-                    ('c_Normal-true', 'Cartoons True Normals', ''),
-                    None,
                     ('Albedo',      'Albedo',''),
                     ('Normal',      'Normal',''),
                     ('Glossy',      'Glossy',''),
@@ -252,6 +248,10 @@ class BakeLabAddMapItem(bpy.types.Operator):
             ),
             default = 'Albedo'
         )
+    # None,
+    # ('c_Albedo', 'Cartoons Albedo', ''),
+    # ('c_ORM', 'Cartoons ORM', ''),
+    # ('c_Normal-true', 'Cartoons True Normals', '')
     width: IntProperty(name = 'Width',default = 1024,
                                     min = 1, soft_max = 16384)
     height: IntProperty(name = 'Height',default = 1024,
@@ -371,21 +371,21 @@ class BakeLabAddMapItem(bpy.types.Operator):
         if self.type == 'c_Albedo':
             item.img_name = '*_orm'
             item.samples  = 4
-            png_compression = 0
-            deep_search = false
+            item.png_compression = 0
+            deep_search = False
         if self.type == 'c_ORM':
             item.img_name = '*_orm'
             item.samples  = 4
             item.color_space = 'Non-Color'
-            png_compression = 0
-            deep_search = false
+            item.png_compression = 0
+            item.deep_search = False
         if self.type == 'c_Normal-true':
             item.img_name = '*_n'
             item.samples = 16
             item.color_space = 'Non-Color'
             item.aa_override = 1  # Because cycles has buildin anti-aliasing for normals
-            deep_search = false
-            png_compression = 0
+            item.deep_search = False
+            item.png_compression = 0
         if self.type == 'Albedo':
             item.img_name = '*_t'
             item.samples  = 4
