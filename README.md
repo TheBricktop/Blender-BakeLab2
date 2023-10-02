@@ -13,6 +13,12 @@ Main Features:
 * Adaptive image size by object's surface size;
 * Unwrap and Bake Multiple Objects into one image;
 
+## Installation
+
+* In Github Click "Code" > Download Zip
+* In Blender : Edit > Preferences > Addons > Install Addon > and click on downloaded zip
+* Enable newly installed addon
+
 video:
 https://youtu.be/XmXek3TPZLk
 
